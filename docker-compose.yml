@@ -1,0 +1,28 @@
+# Local dev stack: backend API + Postgres. Run `docker compose up --build`.
+# The frontend runs separately with `npm run dev` (it proxies /api to localhost:8000).
+services:
+  api:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - AI_MODEL=${AI_MODEL:-claude-sonnet-4-6}
+      - DATABASE_URL=postgresql+psycopg://seotuners:seotuners@db:5432/seotuners
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=seotuners
+      - POSTGRES_PASSWORD=seotuners
+      - POSTGRES_DB=seotuners
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

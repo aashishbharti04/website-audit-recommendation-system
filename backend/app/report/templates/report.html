@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>SEO Audit — {{ client_name }}</title>
+<style>
+  @page { size: A4; margin: 18mm 14mm; @bottom-center { content: "{{ agency.name }} · SEO Audit · page " counter(page) " of " counter(pages); font-size: 9px; color: #9ca3af; } }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #111827; margin: 0; line-height: 1.5; font-size: 13px; }
+  .accent { color: {{ agency.primary }}; }
+  .cover { padding: 36px 0 24px; border-bottom: 3px solid {{ agency.primary }}; margin-bottom: 28px; }
+  .brand { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 800; letter-spacing: -.3px; }
+  .brand img { height: 36px; }
+  h1 { font-size: 30px; margin: 18px 0 6px; letter-spacing: -.5px; }
+  .muted { color: #6b7280; }
+  .meta-row { display: flex; gap: 28px; margin-top: 14px; flex-wrap: wrap; }
+  .meta-row div span { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #9ca3af; }
+  .meta-row div b { font-size: 15px; }
+  .scorewrap { display: flex; align-items: center; gap: 24px; margin: 8px 0 30px; }
+  .score { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #fff; flex-shrink: 0; }
+  .score b { font-size: 40px; line-height: 1; } .score span { font-size: 12px; opacity: .9; }
+  .summary { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px 18px; }
+  h2 { font-size: 17px; margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }
+  .pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+  .pill { padding: 5px 12px; border-radius: 99px; font-size: 12px; font-weight: 700; color: #fff; }
+  .wins { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px 18px 14px 34px; }
+  .wins li { margin: 5px 0; }
+  .issue { border: 1px solid #e5e7eb; border-left-width: 5px; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; page-break-inside: avoid; }
+  .issue-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .issue-head h3 { font-size: 14px; margin: 0; }
+  .tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #fff; padding: 3px 8px; border-radius: 5px; white-space: nowrap; }
+  .cat { font-size: 11px; color: #6b7280; }
+  .issue p { margin: 6px 0 0; }
+  .rec { background: #f9fafb; border-radius: 6px; padding: 8px 10px; margin-top: 8px; font-size: 12px; }
+  .rec b { color: {{ agency.primary }}; }
+  .affected { font-size: 11px; color: #9ca3af; margin-top: 6px; word-break: break-all; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #eee; }
+  th { color: #6b7280; text-transform: uppercase; font-size: 10px; letter-spacing: .04em; }
+  .footer { margin-top: 34px; padding-top: 14px; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 11px; text-align: center; }
+</style>
+</head>
+<body>
+  <div class="cover">
+    <div class="brand">
+      {% if agency.logo_url %}<img src="{{ agency.logo_url }}" alt="{{ agency.name }}" />{% endif %}
+      <span class="accent">{{ agency.name }}</span>
+    </div>
+    <h1>SEO Audit Report</h1>
+    <div class="muted">Prepared for <b>{{ client_name }}</b></div>
+    <div class="meta-row">
+      <div><span>Website</span><b>{{ audit.url }}</b></div>
+      <div><span>Pages analysed</span><b>{{ crawl.pages|length if crawl else 0 }}</b></div>
+      <div><span>Links checked</span><b>{{ crawl.links_checked if crawl else 0 }}</b></div>
+      <div><span>Date</span><b>{{ generated_at }}</b></div>
+    </div>
+  </div>
+
+  {% set s = score if score is not none else 0 %}
+  {% set scolor = '#16a34a' if s >= 80 else ('#d97706' if s >= 50 else '#dc2626') %}
+  <div class="scorewrap">
+    <div class="score" style="background: {{ scolor }}"><b>{{ s }}</b><span>/ 100</span></div>
+    <div class="summary">
+      <b>Executive summary</b><br/>
+      {{ analysis.executive_summary if analysis else "No analysis available." }}
+    </div>
+  </div>
+
+  <div class="pills">
+    {% for sev, count in by_sev.items() %}
+      <span class="pill" style="background: {{ sev_color[sev] }}">{{ count }} {{ sev }}</span>
+    {% endfor %}
+  </div>
+
+  {% if analysis and analysis.quick_wins %}
+  <h2>⚡ Quick wins</h2>
+  <ul class="wins">
+    {% for w in analysis.quick_wins %}<li>{{ w }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+
+  <h2>Prioritised issues ({{ issues|length }})</h2>
+  {% for i in issues %}
+    <div class="issue" style="border-left-color: {{ sev_color[i.severity.value] }}">
+      <div class="issue-head">
+        <h3>{{ i.title }} <span class="cat">· {{ i.category.value }}</span></h3>
+        <span class="tag" style="background: {{ sev_color[i.severity.value] }}">{{ i.severity.value }}</span>
+      </div>
+      <p>{{ i.description }}</p>
+      <div class="rec"><b>Fix:</b> {{ i.recommendation }}</div>
+      {% if i.affected %}<div class="affected">Affected: {{ i.affected }}</div>{% endif %}
+    </div>
+  {% else %}
+    <p class="muted">No issues detected. 🎉</p>
+  {% endfor %}
+
+  {% if crawl and crawl.broken_links %}
+  <h2>Broken links ({{ crawl.broken_links|length }})</h2>
+  <table>
+    <thead><tr><th>URL</th><th>Status</th><th>Type</th></tr></thead>
+    <tbody>
+      {% for b in crawl.broken_links[:40] %}
+      <tr><td>{{ b.url }}</td><td>{{ b.status or b.error or 'error' }}</td><td>{{ 'internal' if b.internal else 'external' }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <div class="footer">
+    Generated by {{ agency.name }} · {{ agency.website }} · {{ agency.email }}<br/>
+    © {{ generated_at[-8:] | default('') }} {{ agency.name }}. This report is confidential and prepared exclusively for {{ client_name }}.
+  </div>
+</body>
+</html>
