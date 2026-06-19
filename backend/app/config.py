@@ -41,7 +41,12 @@ class Settings(BaseSettings):
     agency_email: str = "hello@seotuners.com"
 
     # --- server ---
-    cors_origins: str = "http://localhost:5173,http://localhost:3000"
+    # Origins allowed to call the API from a browser. The live GitHub Pages site is
+    # cross-origin, so it must be listed here (override with the CORS_ORIGINS env on your host).
+    cors_origins: str = (
+        "http://localhost:5173,http://localhost:3000,http://localhost:3300,"
+        "https://aashishbharti04.github.io"
+    )
 
     @property
     def cors_origin_list(self) -> list[str]:
