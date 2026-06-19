@@ -1,8 +1,16 @@
 import type { Config } from "tailwindcss";
 
+// Resolve content globs relative to THIS file, not process.cwd(), so Tailwind
+// scans the right files no matter where `next dev` is launched from.
+// Use forward slashes — glob patterns break with Windows backslashes.
+const root = __dirname.replace(/\\/g, "/");
+
 const config: Config = {
   darkMode: ["class"],
-  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
+  content: [
+    `${root}/app/**/*.{ts,tsx}`,
+    `${root}/components/**/*.{ts,tsx}`,
+  ],
   theme: {
     container: { center: true, padding: "1.5rem", screens: { "2xl": "1100px" } },
     extend: {
